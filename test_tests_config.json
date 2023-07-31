@@ -1,0 +1,33 @@
+[
+  {
+    "framework": "brownie",
+    "python_venv_path": "/path/to/ackee/brownie_venv",
+    "command": "brownie test brownie_tests --network",
+    "project_path": "/path/to/ackee/v3-core",
+    "compile_command": "brownie compile",
+    "networks": ["anvil", "development", "hardhat"]
+  },
+  {
+    "framework": "ape",
+    "python_venv_path": "/path/to/ackee/ape_venv",
+    "command": "ape test ape_tests --network",
+    "project_path": "/path/to/ackee/v3-core",
+    "compile_command": "ape compile",
+    "networks": ["ethereum:local:foundry", "ethereum:local:ganache", "ethereum:local:hardhat"]
+  },
+  {
+    "framework": "woke",
+    "python_venv_path": "/path/to/ackee/woke_venv",
+    "command": "woke test woke_tests",
+    "project_path": "/path/to/ackee/v3-core",
+    "compile_command": "woke compile && woke init pytypes",
+    "networks": ["anvil", "ganache", "hardhat"]
+  },
+  {
+    "framework": "hardhat",
+    "command": "npx hardhat test hardhat_tests/*.ts --network",
+    "project_path": "/path/to/ackee/v3-core",
+    "compile_command": "npx hardhat compile",
+    "networks": ["anvil", "ganache", "hardhat"]
+  }
+]

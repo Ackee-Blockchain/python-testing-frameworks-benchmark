@@ -1,0 +1,10 @@
+{
+    "getGasCostOfGetAmount0Delta_test_gas_cost_true":"628",
+    "getGasCostOfGetAmount0Delta_test_gas_cost_false":"496",
+    "getGasCostOfGetAmount0Delta_test_round_up_true":"628",
+    "getGasCostOfGetAmount0Delta_test_round_up_false":"496",
+    "getGasCostOfGetNextSqrtPriceFromOutput_test_zero_for_one_true_gas":"441",
+    "getGasCostOfGetNextSqrtPriceFromOutput_test_zero_for_one_false_gas":"866",
+    "getGasCostOfGetNextSqrtPriceFromInput_test_zero_for_one_true_gas":"771",
+    "getGasCostOfGetNextSqrtPriceFromInput_test_zero_for_one_false_gas":"536"
+}

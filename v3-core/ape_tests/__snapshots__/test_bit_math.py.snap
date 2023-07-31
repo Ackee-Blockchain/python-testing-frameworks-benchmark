@@ -1,0 +1,8 @@
+{
+    "mostSignificantBit_gas_cost_smaller_number": "301",
+    "mostSignificantBit_gas_cost_max_uint128": "373",
+    "mostSignificantBit_gas_cost_max_uint256": "391",
+    "leastSignificantBit_gas_cost_smaller_number": "429",
+    "leastSignificantBit_gas_cost_max_uint128": "431",
+    "leastSignificantBit_gas_cost_max_uint256": "431"
+}
