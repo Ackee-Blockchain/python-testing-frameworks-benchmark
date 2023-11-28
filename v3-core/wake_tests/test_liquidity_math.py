@@ -1,13 +1,12 @@
 import pytest
 from pytypes.contracts.test.LiquidityMathTest import LiquidityMathTest
-from woke.testing import *
+from wake.testing import *
 
-from woke_tests.snapshots import match_snapshot
+from wake_tests.snapshots import match_snapshot
 
 
 @pytest.fixture(scope="function")
 def liquidity_math():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     liquidity_math = LiquidityMathTest.deploy(from_=default_chain.accounts[0])
 
     return liquidity_math

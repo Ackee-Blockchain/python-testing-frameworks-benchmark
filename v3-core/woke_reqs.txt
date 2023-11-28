@@ -65,5 +65,5 @@ typing_extensions==4.5.0
 watchdog==2.2.1
 wcwidth==0.2.6
 websocket-client==1.5.1
-woke==3.5.0
+wake==4.0.0
 yarl==1.9.2

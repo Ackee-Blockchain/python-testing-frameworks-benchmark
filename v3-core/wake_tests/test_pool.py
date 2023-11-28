@@ -6,10 +6,10 @@ from pytypes.contracts.libraries.Oracle import Oracle
 from pytypes.contracts.test.TestERC20 import TestERC20
 from pytypes.contracts.test.TestUniswapV3Callee import TestUniswapV3Callee
 from pytypes.contracts.UniswapV3Factory import UniswapV3Factory
-from woke.testing import *
+from wake.testing import *
 
-import woke_tests.utils as utils
-from woke_tests.utils import (MAX_SQRT_RATIO, MAX_UINT_128, MIN_SQRT_RATIO,
+import wake_tests.utils as utils
+from wake_tests.utils import (MAX_SQRT_RATIO, MAX_UINT_128, MIN_SQRT_RATIO,
                               TEST_POOL_START_TIME)
 
 

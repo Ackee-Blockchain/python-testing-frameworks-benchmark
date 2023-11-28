@@ -8,15 +8,15 @@ import time
 CONFIG_FILE = "test_tests_config.json"
 TEST_RUNS = 200
 RESULTS_FILE = "test_results.csv"
-WOKE_TOML = "woke.toml"
+WAKE_TOML = "wake.toml"
 
 
-def update_woke_toml(network, project_path):
-    woke_toml_path = pathlib.Path(project_path).joinpath(WOKE_TOML)
-    woke_data = toml.load(woke_toml_path)
-    woke_data["testing"]["cmd"] = network
-    with open(woke_toml_path, "w") as woke_file:
-        toml.dump(woke_data, woke_file)
+def update_wake_toml(network, project_path):
+    wake_toml_path = pathlib.Path(project_path).joinpath(WAKE_TOML)
+    wake_data = toml.load(wake_toml_path)
+    wake_data["testing"]["cmd"] = network
+    with open(wake_toml_path, "w") as wake_file:
+        toml.dump(wake_data, wake_file)
 
 
 def update_hardhat_config(project_path, mode):
@@ -34,8 +34,8 @@ def update_hardhat_config(project_path, mode):
 def run_tests(python_venv_path, command, network, framework, project_path):
     print(f"Running {framework} {network} tests...")
     command_with_network = f"{command} {network}"
-    if framework == "woke":
-        update_woke_toml(network, project_path)
+    if framework == "wake":
+        update_wake_toml(network, project_path)
         command_with_network = f"{command}"
     if framework == "hardhat" and network in ["anvil", "ganache"]:
         update_hardhat_config(project_path, 'enable')

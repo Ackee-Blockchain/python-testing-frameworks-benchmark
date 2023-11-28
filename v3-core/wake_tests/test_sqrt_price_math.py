@@ -1,10 +1,10 @@
 import pytest
 from pytypes.contracts.test.SqrtPriceMathTest import SqrtPriceMathTest
-from woke.testing import *
+from wake.testing import *
 
-import woke_tests.utils as utils
-from woke_tests.snapshots import match_snapshot
-from woke_tests.utils import MAX_UINT_128, MAX_UINT_256
+import wake_tests.utils as utils
+from wake_tests.snapshots import match_snapshot
+from wake_tests.utils import MAX_UINT_128, MAX_UINT_256
 
 
 @pytest.fixture(scope="module")

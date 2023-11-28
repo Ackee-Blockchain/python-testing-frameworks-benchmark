@@ -16,11 +16,11 @@
     "networks": ["ethereum:local:foundry", "ethereum:local:ganache", "ethereum:local:hardhat"]
   },
   {
-    "framework": "woke",
-    "python_venv_path": "/path/to/ackee/woke_venv",
-    "command": "woke test woke_tests",
+    "framework": "wake",
+    "python_venv_path": "/path/to/ackee/wake_venv",
+    "command": "wake test wake_tests",
     "project_path": "/path/to/ackee/v3-core",
-    "compile_command": "woke compile && woke init pytypes",
+    "compile_command": "wake compile && wake init pytypes",
     "networks": ["anvil", "ganache", "hardhat"]
   },
   {

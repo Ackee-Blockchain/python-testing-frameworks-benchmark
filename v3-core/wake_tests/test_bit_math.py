@@ -1,13 +1,12 @@
 import pytest
 from pytypes.contracts.test.BitMathTest import BitMathTest
-from woke.testing import *
+from wake.testing import *
 
-from woke_tests.snapshots import match_snapshot
+from wake_tests.snapshots import match_snapshot
 
 
 @pytest.fixture(scope="function")
 def bit_math():
-    default_chain.set_default_accounts(default_chain.accounts[0])
     bit_math = BitMathTest.deploy(from_=default_chain.accounts[0])
 
     return bit_math
