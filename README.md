@@ -8,12 +8,12 @@ In this repository you will find the following:
 * `process_results.py` Python script to process the measured times
 * `test_results.csv`: CSV file containing the measured times
 * `processed_results.csv` CSV file containing the processed results of measured times
-* `v3_core`: Directory with rewritten tests for [v3-core](https://github.com/Uniswap/v3-core) 
+* `v3_core`: Directory with rewritten tests for [v3-core](https://github.com/Uniswap/v3-core)
 * `README.md`: This readme
 
 # Methodology
 
-Testing was done with 4 different testing frameworks, namely Woke, Brownie and Ape which are frameworks written in Python and Hardhat+Ethers.js which was used in the original tests.
+Testing was done with 4 different testing frameworks, namely Wake, Brownie and Ape which are frameworks written in Python and Hardhat+Ethers.js which was used in the original tests.
 Three different development chains, namely Anvil, Ganache and Hardhat.
 As for the tests, popular Uniswap-v3 project and its [v3-core](https://github.com/Uniswap/v3-core) was chosen and it's tests partly rewritten and repurposed for each of the python resulting in 271 tests.
 
@@ -25,7 +25,7 @@ All Python frameworks have their requirements files in `v3_core` directory. As f
 
 The execution times **in seconds** of the tests are shown in the following table in format: **mean (standard deviation)**. Tests were executed and **measured 200 times**.
 
-| /       | Brownie      | Ape          | Woke         | Hardhat & Ethers.js |
+| /       | Brownie      | Ape          | Wake         | Hardhat & Ethers.js |
 |---------|--------------|--------------|--------------|---------------------|
 | Anvil   | 34.80 (1.31) | 53.27 (1.22) | 3.37 (0.05)  | 10.96 (0.40)        |
 | Ganache | 51.48 (1.41) | 72.72 (2.09) | 15.78 (0.22) | 118.71 (1.69)       |

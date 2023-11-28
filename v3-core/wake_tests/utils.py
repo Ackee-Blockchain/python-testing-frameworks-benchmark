@@ -12,7 +12,7 @@ from pytypes.contracts.test.MockTimeUniswapV3PoolDeployer import \
 from pytypes.contracts.test.TestERC20 import TestERC20
 from pytypes.contracts.test.TestUniswapV3Callee import TestUniswapV3Callee
 from pytypes.contracts.UniswapV3Factory import UniswapV3Factory
-from woke.testing import *
+from wake.testing import *
 
 decimal.setcontext(decimal.Context(prec=40))
 

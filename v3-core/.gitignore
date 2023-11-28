@@ -4,10 +4,10 @@ crytic-export/
 node_modules/
 typechain/
 
-.woke-build
-.woke-logs
 .env
 pytypes
 __pycache__/
 *.py[cod]
 .hypothesis/
+.wake
+wake-coverage.cov

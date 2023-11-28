@@ -1,6 +1,10 @@
 [detectors]
 exclude = []
-ignore_paths = [ "node_modules", ".woke-build", "venv", "lib",]
+exclude_paths = [
+    "node_modules",
+    "venv",
+    "lib",
+]
 
 [testing]
 cmd = "hardhat"
@@ -15,8 +19,15 @@ cmd_args = "-k istanbul -q"
 cmd_args = ""
 
 [compiler.solc]
-ignore_paths = [ "node_modules", ".woke-build", "venv", "lib", "audits",]
-include_paths = [ "node_modules",]
+include_paths = [
+    "node_modules",
+]
+exclude_paths = [
+    "node_modules",
+    "venv",
+    "lib",
+    "audits",
+]
 
 [compiler.solc.optimizer]
 enabled = true
