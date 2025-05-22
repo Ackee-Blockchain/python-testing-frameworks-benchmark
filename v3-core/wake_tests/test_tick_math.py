@@ -18,16 +18,16 @@ decimal.setcontext(decimal.Context(prec=500))
 
 @pytest.fixture(scope="module")
 def tick_math():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-    tick_math = TickMathTest.deploy(from_=default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
+    tick_math = TickMathTest.deploy(from_=chain.accounts[0])
 
     return tick_math
 
 
 @pytest.fixture(scope="module", autouse=True)
-def chain():
-    with default_chain.connect():
-        yield default_chain
+def wake_chain():
+    with chain.connect():
+        yield chain
 
 
 class TestGetSqrtRatioAtTick:

@@ -84,7 +84,7 @@ def check_tick_is_not_clear(pool, tick):
 
 def create_pool(fee, tick_spacing, first_token, second_token, factory):
     mock_time_pool_deployer = MockTimeUniswapV3PoolDeployer.deploy(
-        from_=default_chain.accounts[0]
+        from_=chain.accounts[0]
     )
     tx = mock_time_pool_deployer.deploy_(
         factory.address,
@@ -92,7 +92,7 @@ def create_pool(fee, tick_spacing, first_token, second_token, factory):
         second_token.address,
         fee.value,
         tick_spacing.value,
-        from_=default_chain.accounts[0],
+        from_=chain.accounts[0],
     )
 
     return MockTimeUniswapV3Pool(tx.events[0].pool)

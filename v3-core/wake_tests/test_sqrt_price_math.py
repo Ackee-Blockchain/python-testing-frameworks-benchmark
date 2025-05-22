@@ -9,16 +9,16 @@ from wake_tests.utils import MAX_UINT_128, MAX_UINT_256
 
 @pytest.fixture(scope="module")
 def sqrt_price_math():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-    sqrt_price_math = SqrtPriceMathTest.deploy(from_=default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
+    sqrt_price_math = SqrtPriceMathTest.deploy(from_=chain.accounts[0])
 
     return sqrt_price_math
 
 
 @pytest.fixture(scope="module", autouse=True)
-def chain():
-    with default_chain.connect():
-        yield default_chain
+def wake_chain():
+    with chain.connect():
+        yield chain
 
 
 class TestGetNextSqrtPriceFromInput:

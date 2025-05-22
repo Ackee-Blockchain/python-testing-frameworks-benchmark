@@ -7,15 +7,15 @@ from wake_tests.snapshots import match_snapshot
 
 @pytest.fixture(scope="function")
 def bit_math():
-    bit_math = BitMathTest.deploy(from_=default_chain.accounts[0])
+    bit_math = BitMathTest.deploy(from_=chain.accounts[0])
 
     return bit_math
 
 
 @pytest.fixture(scope="function", autouse=True)
-def chain():
-    with default_chain.connect():
-        yield default_chain
+def wake_chain():
+    with chain.connect():
+        yield chain
 
 
 class TestBitMath:

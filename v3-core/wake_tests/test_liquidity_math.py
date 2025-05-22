@@ -7,15 +7,15 @@ from wake_tests.snapshots import match_snapshot
 
 @pytest.fixture(scope="function")
 def liquidity_math():
-    liquidity_math = LiquidityMathTest.deploy(from_=default_chain.accounts[0])
+    liquidity_math = LiquidityMathTest.deploy(from_=chain.accounts[0])
 
     return liquidity_math
 
 
 @pytest.fixture(scope="function", autouse=True)
-def chain():
-    with default_chain.connect():
-        yield default_chain
+def wake_chain():
+    with chain.connect():
+        yield chain
 
 
 class TestLiquidityMath:

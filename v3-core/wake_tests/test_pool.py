@@ -14,17 +14,17 @@ from wake_tests.utils import (MAX_SQRT_RATIO, MAX_UINT_128, MIN_SQRT_RATIO,
 
 
 @pytest.fixture(scope="function", autouse=True)
-def chain():
-    with default_chain.connect():
-        yield default_chain
+def wake_chain():
+    with chain.connect():
+        yield chain
 
 
 @pytest.fixture(scope="function")
 def tokens():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-    token0 = TestERC20.deploy(2**255, from_=default_chain.accounts[0])
-    token1 = TestERC20.deploy(2**255, from_=default_chain.accounts[0])
-    token2 = TestERC20.deploy(2**255, from_=default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
+    token0 = TestERC20.deploy(2**255, from_=chain.accounts[0])
+    token1 = TestERC20.deploy(2**255, from_=chain.accounts[0])
+    token2 = TestERC20.deploy(2**255, from_=chain.accounts[0])
 
     token0, token1, token2 = sorted(
         [token0, token1, token2], key=lambda token: token.address
@@ -34,13 +34,13 @@ def tokens():
 
 @pytest.fixture(scope="function")
 def factory():
-    default_chain.set_default_accounts(default_chain.accounts[0])
-    return UniswapV3Factory.deploy(from_=default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
+    return UniswapV3Factory.deploy(from_=chain.accounts[0])
 
 
 @pytest.fixture(scope="function")
 def pool_fixture(tokens, factory):
-    default_chain.set_default_accounts(default_chain.accounts[0])
+    chain.set_default_accounts(chain.accounts[0])
     token0, token1, token2 = tokens
     factory = factory
     pool = utils.create_pool(
@@ -52,7 +52,7 @@ def pool_fixture(tokens, factory):
         factory,
         pool,
         utils.TickSpacings.MEDIUM,
-        TestUniswapV3Callee.deploy(from_=default_chain.accounts[0]),
+        TestUniswapV3Callee.deploy(from_=chain.accounts[0]),
     )
     return token0, token1, factory, pool, pool_functions
 
@@ -75,10 +75,10 @@ class TestInitialize:
         Fails if already initialized
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
         with must_revert():
             pool.initialize(
-                utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0]
+                utils.encode_price_sqrt(1, 1), from_=chain.accounts[0]
             )
 
     def test_initialize_fails_if_starting_price_is_too_low(self, pool_fixture):
@@ -87,9 +87,9 @@ class TestInitialize:
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
         with must_revert(Error("R")):
-            pool.initialize(1, from_=default_chain.accounts[0])
+            pool.initialize(1, from_=chain.accounts[0])
         with must_revert(Error("R")):
-            pool.initialize(MIN_SQRT_RATIO - 1, from_=default_chain.accounts[0])
+            pool.initialize(MIN_SQRT_RATIO - 1, from_=chain.accounts[0])
 
     def test_initialize_fails_if_starting_price_is_too_high(self, pool_fixture):
         """
@@ -97,16 +97,16 @@ class TestInitialize:
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
         with must_revert(Error("R")):
-            pool.initialize(MAX_SQRT_RATIO, from_=default_chain.accounts[0])
+            pool.initialize(MAX_SQRT_RATIO, from_=chain.accounts[0])
         with must_revert(Error("R")):
-            pool.initialize(2**160 - 1, from_=default_chain.accounts[0])
+            pool.initialize(2**160 - 1, from_=chain.accounts[0])
 
     def test_initialize_can_be_initialized_at_min_sqrt_ratio(self, pool_fixture):
         """
         Can be initialized at MIN_SQRT_RATIO
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(MIN_SQRT_RATIO, from_=default_chain.accounts[0])
+        pool.initialize(MIN_SQRT_RATIO, from_=chain.accounts[0])
         assert pool.slot0().tick == utils.get_min_tick(1)
 
     def test_initialize_can_be_initialized_at_max_sqrt_ratio_minus_one(
@@ -116,7 +116,7 @@ class TestInitialize:
         Can be initialized at MAX_SQRT_RATIO - 1
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(MAX_SQRT_RATIO - 1, from_=default_chain.accounts[0])
+        pool.initialize(MAX_SQRT_RATIO - 1, from_=chain.accounts[0])
         assert pool.slot0().tick == utils.get_max_tick(1) - 1
 
     def test_initialize_sets_initial_variables(self, pool_fixture):
@@ -125,7 +125,7 @@ class TestInitialize:
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
         price = utils.encode_price_sqrt(1, 2)
-        pool.initialize(price, from_=default_chain.accounts[0])
+        pool.initialize(price, from_=chain.accounts[0])
 
         assert pool.slot0().sqrtPriceX96 == price
         assert pool.slot0().observationIndex == 0
@@ -136,7 +136,7 @@ class TestInitialize:
         Initializes the first observations slot
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
 
         observation = pool.observations(0)
         expected_observation = Oracle.Observation(
@@ -154,7 +154,7 @@ class TestInitialize:
         token0, token1, factory, pool, pool_helper = pool_fixture
         sqrt_price_x96 = utils.encode_price_sqrt(1, 2)
 
-        tx = pool.initialize(sqrt_price_x96, from_=default_chain.accounts[0])
+        tx = pool.initialize(sqrt_price_x96, from_=chain.accounts[0])
         assert (
             IUniswapV3PoolEvents.Initialize(sqrtPriceX96=sqrt_price_x96, tick=-6932)
             in tx.events
@@ -168,15 +168,15 @@ class TestIncreaseObservationCardinalityNext:
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
         with must_revert(Error("LOK")):
-            pool.increaseObservationCardinalityNext(2, from_=default_chain.accounts[0])
+            pool.increaseObservationCardinalityNext(2, from_=chain.accounts[0])
 
     def test_emits_an_event_including_both_old_and_new(self, pool_fixture):
         """
         Emits an event including both old and new
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
-        tx = pool.increaseObservationCardinalityNext(2, from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
+        tx = pool.increaseObservationCardinalityNext(2, from_=chain.accounts[0])
         assert (
             IUniswapV3PoolEvents.IncreaseObservationCardinalityNext(
                 observationCardinalityNextOld=1, observationCardinalityNextNew=2
@@ -189,9 +189,9 @@ class TestIncreaseObservationCardinalityNext:
         Does not emit an event for no op call
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
-        pool.increaseObservationCardinalityNext(3, from_=default_chain.accounts[0])
-        tx = pool.increaseObservationCardinalityNext(2, from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
+        pool.increaseObservationCardinalityNext(3, from_=chain.accounts[0])
+        tx = pool.increaseObservationCardinalityNext(2, from_=chain.accounts[0])
         assert not any(
             isinstance(e, IUniswapV3PoolEvents.IncreaseObservationCardinalityNext)
             for e in tx.events
@@ -202,9 +202,9 @@ class TestIncreaseObservationCardinalityNext:
         Does not change cardinality next if less than current
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
-        pool.increaseObservationCardinalityNext(3, from_=default_chain.accounts[0])
-        pool.increaseObservationCardinalityNext(2, from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
+        pool.increaseObservationCardinalityNext(3, from_=chain.accounts[0])
+        pool.increaseObservationCardinalityNext(2, from_=chain.accounts[0])
         assert pool.slot0().observationCardinalityNext == 3
 
     def test_increases_cardinality_and_cardinality_next_first_time(self, pool_fixture):
@@ -212,8 +212,8 @@ class TestIncreaseObservationCardinalityNext:
         Increases cardinality and cardinality next first time
         """
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
-        pool.increaseObservationCardinalityNext(2, from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
+        pool.increaseObservationCardinalityNext(2, from_=chain.accounts[0])
         assert pool.slot0().observationCardinality == 1
         assert pool.slot0().observationCardinalityNext == 2
 
@@ -226,7 +226,7 @@ class TestMint:
         token0, token1, factory, pool, pool_helper = pool_fixture
         with must_revert(Error("LOK")):
             pool_helper.mint(
-                default_chain.accounts[0],
+                chain.accounts[0],
                 -pool_helper.tick_spacing,
                 pool_helper.tick_spacing,
                 1,
@@ -237,10 +237,10 @@ class TestMint:
         def initialized_pool_fixture(self, pool_fixture):
             token0, token1, factory, pool, pool_helper = pool_fixture
             pool.initialize(
-                utils.encode_price_sqrt(1, 10), from_=default_chain.accounts[0]
+                utils.encode_price_sqrt(1, 10), from_=chain.accounts[0]
             )
             pool_helper.mint(
-                default_chain.accounts[0],
+                chain.accounts[0],
                 pool_helper.min_tick,
                 pool_helper.max_tick,
                 3161,
@@ -256,7 +256,7 @@ class TestMint:
                 """
                 token0, token1, factory, pool, pool_helper = initialized_pool_fixture
                 with must_revert():
-                    pool_helper.mint(default_chain.accounts[0], 1, 0, 1)
+                    pool_helper.mint(chain.accounts[0], 1, 0, 1)
 
             def test_fails_if_tick_lower_less_than_min_tick(
                 self, initialized_pool_fixture
@@ -266,7 +266,7 @@ class TestMint:
                 """
                 token0, token1, factory, pool, pool_helper = initialized_pool_fixture
                 with must_revert():
-                    pool_helper.mint(default_chain.accounts[0], -887273, 0, 1)
+                    pool_helper.mint(chain.accounts[0], -887273, 0, 1)
 
             def test_fails_if_tick_upper_greater_than_max_tick(
                 self, initialized_pool_fixture
@@ -276,7 +276,7 @@ class TestMint:
                 """
                 token0, token1, factory, pool, pool_helper = initialized_pool_fixture
                 with must_revert():
-                    pool_helper.mint(default_chain.accounts[0], 0, 887273, 1)
+                    pool_helper.mint(chain.accounts[0], 0, 887273, 1)
 
             def test_fails_if_amount_exceeds_the_max(self, initialized_pool_fixture):
                 """
@@ -286,13 +286,13 @@ class TestMint:
                 max_liquidity_gross = pool.maxLiquidityPerTick()
                 with must_revert():
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         pool_helper.min_tick + pool_helper.tick_spacing,
                         pool_helper.max_tick - pool_helper.tick_spacing,
                         max_liquidity_gross + 1,
                     )
                 pool_helper.mint(
-                    default_chain.accounts[0],
+                    chain.accounts[0],
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                     max_liquidity_gross,
@@ -306,7 +306,7 @@ class TestMint:
                 """
                 token0, token1, factory, pool, pool_helper = initialized_pool_fixture
                 pool_helper.mint(
-                    default_chain.accounts[0],
+                    chain.accounts[0],
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                     1000,
@@ -315,7 +315,7 @@ class TestMint:
                 max_liquidity_gross = pool.maxLiquidityPerTick()
                 with must_revert():
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         pool_helper.min_tick + pool_helper.tick_spacing,
                         pool_helper.max_tick - pool_helper.tick_spacing,
                         max_liquidity_gross - 1000 + 1,
@@ -323,7 +323,7 @@ class TestMint:
 
                 with must_revert():
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         pool_helper.min_tick + pool_helper.tick_spacing * 2,
                         pool_helper.max_tick - pool_helper.tick_spacing,
                         max_liquidity_gross - 1000 + 1,
@@ -331,14 +331,14 @@ class TestMint:
 
                 with must_revert():
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         pool_helper.min_tick + pool_helper.tick_spacing,
                         pool_helper.max_tick - pool_helper.tick_spacing * 2,
                         max_liquidity_gross - 1000 + 1,
                     )
 
                 pool_helper.mint(
-                    default_chain.accounts[0],
+                    chain.accounts[0],
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                     max_liquidity_gross - 1000,
@@ -351,7 +351,7 @@ class TestMint:
                 token0, token1, factory, pool, pool_helper = initialized_pool_fixture
                 with must_revert():
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         pool_helper.min_tick + pool_helper.tick_spacing,
                         pool_helper.max_tick - pool_helper.tick_spacing,
                         0,
@@ -385,10 +385,10 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    tx = pool_helper.mint(default_chain.accounts[0], -22980, 0, 10000)
+                    tx = pool_helper.mint(chain.accounts[0], -22980, 0, 10000)
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=21549,
                         )
@@ -410,7 +410,7 @@ class TestMint:
                     ) = initialized_pool_fixture
                     max_tick = utils.get_max_tick(pool_helper.tick_spacing)
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         max_tick - pool_helper.tick_spacing,
                         max_tick,
                         2**102,
@@ -431,11 +431,11 @@ class TestMint:
                     ) = initialized_pool_fixture
                     max_tick = utils.get_max_tick(pool_helper.tick_spacing)
                     tx = pool_helper.mint(
-                        default_chain.accounts[0], -22980, max_tick, 10000
+                        chain.accounts[0], -22980, max_tick, 10000
                     )
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=31549,
                         )
@@ -456,16 +456,16 @@ class TestMint:
                         pool_helper,
                     ) = initialized_pool_fixture
 
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 10000)
-                    pool.burn(-240, 0, 10000, from_=default_chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -240, 0, 10000)
+                    pool.burn(-240, 0, 10000, from_=chain.accounts[0])
 
                     amount0, amount1 = pool.collect(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         -240,
                         0,
                         MAX_UINT_128,
                         MAX_UINT_128,
-                        from_=default_chain.accounts[0],
+                        from_=chain.accounts[0],
                         request_type="call",
                     )
 
@@ -485,20 +485,20 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
                     assert pool.ticks(-240).liquidityGross == 100
                     assert pool.ticks(0).liquidityGross == 100
                     assert pool.ticks(pool_helper.tick_spacing).liquidityGross == 0
                     assert pool.ticks(pool_helper.tick_spacing * 2).liquidityGross == 0
                     pool_helper.mint(
-                        default_chain.accounts[0], -240, pool_helper.tick_spacing, 150
+                        chain.accounts[0], -240, pool_helper.tick_spacing, 150
                     )
                     assert pool.ticks(-240).liquidityGross == 250
                     assert pool.ticks(0).liquidityGross == 100
                     assert pool.ticks(pool_helper.tick_spacing).liquidityGross == 150
                     assert pool.ticks(pool_helper.tick_spacing * 2).liquidityGross == 0
                     pool_helper.mint(
-                        default_chain.accounts[0], 0, pool_helper.tick_spacing * 2, 60
+                        chain.accounts[0], 0, pool_helper.tick_spacing * 2, 60
                     )
                     assert pool.ticks(-240).liquidityGross == 250
                     assert pool.ticks(0).liquidityGross == 160
@@ -518,9 +518,9 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 40)
-                    pool.burn(-240, 0, 90, from_=default_chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
+                    pool_helper.mint(chain.accounts[0], -240, 0, 40)
+                    pool.burn(-240, 0, 90, from_=chain.accounts[0])
                     assert pool.ticks(-240).liquidityGross == 50
                     assert pool.ticks(0).liquidityGross == 50
 
@@ -537,8 +537,8 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
-                    pool.burn(-240, 0, 100, from_=default_chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
+                    pool.burn(-240, 0, 100, from_=chain.accounts[0])
                     tick_info = pool.ticks(-240)
                     assert tick_info.liquidityGross == 0
                     assert tick_info.feeGrowthOutside0X128 == 0
@@ -557,8 +557,8 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
-                    pool.burn(-240, 0, 100, from_=default_chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
+                    pool.burn(-240, 0, 100, from_=chain.accounts[0])
                     tick_info = pool.ticks(-240)
                     assert tick_info.liquidityGross == 0
                     assert tick_info.feeGrowthOutside0X128 == 0
@@ -578,11 +578,11 @@ class TestMint:
                         pool_helper,
                     ) = initialized_pool_fixture
 
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
                     pool_helper.mint(
-                        default_chain.accounts[0], -pool_helper.tick_spacing, 0, 250
+                        chain.accounts[0], -pool_helper.tick_spacing, 0, 250
                     )
-                    pool.burn(-240, 0, 100, from_=default_chain.accounts[0])
+                    pool.burn(-240, 0, 100, from_=chain.accounts[0])
 
                     tick_info = pool.ticks(-240)
                     assert tick_info.liquidityGross == 0
@@ -613,8 +613,8 @@ class TestMint:
                         secondsPerLiquidityCumulativeX128=0,
                     )
                     utils.check_observation_equals(observation, expected_observation)
-                    pool.advanceTime(1, from_=default_chain.accounts[0])
-                    pool_helper.mint(default_chain.accounts[0], -240, 0, 100)
+                    pool.advanceTime(1, from_=chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -240, 0, 100)
                     utils.check_observation_equals(
                         pool.observations(0), expected_observation
                     )
@@ -638,14 +638,14 @@ class TestMint:
                     tick_spacing = pool_helper.tick_spacing
 
                     tx = pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         100,
                     )
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=317,
                         )
@@ -670,7 +670,7 @@ class TestMint:
                     tick_spacing = pool_helper.tick_spacing
 
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         100,
@@ -694,7 +694,7 @@ class TestMint:
                     tick_spacing = pool_helper.tick_spacing
 
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         100,
@@ -716,11 +716,11 @@ class TestMint:
                     max_tick = utils.get_max_tick(pool_helper.tick_spacing)
 
                     tx = pool_helper.mint(
-                        default_chain.accounts[0], min_tick, max_tick, 10000
+                        chain.accounts[0], min_tick, max_tick, 10000
                     )
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=31623,
                         )
@@ -745,7 +745,7 @@ class TestMint:
                     tick_spacing = pool_helper.tick_spacing
 
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         100,
@@ -754,16 +754,16 @@ class TestMint:
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         100,
-                        from_=default_chain.accounts[0],
+                        from_=chain.accounts[0],
                     )
 
                     amount0, amount1 = pool.collect(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick + tick_spacing,
                         max_tick - tick_spacing,
                         MAX_UINT_128,
                         MAX_UINT_128,
-                        from_=default_chain.accounts[0],
+                        from_=chain.accounts[0],
                     ).return_value
                     assert amount0 == 316
                     assert amount1 == 31
@@ -791,8 +791,8 @@ class TestMint:
                     )
                     utils.check_observation_equals(observation, expected_observation)
 
-                    pool.advanceTime(1, from_=default_chain.accounts[0])
-                    pool_helper.mint(default_chain.accounts[0], min_tick, max_tick, 100)
+                    pool.advanceTime(1, from_=chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], min_tick, max_tick, 100)
                     observation = pool.observations(0)
                     expected_observation = Oracle.Observation(
                         tickCumulative=-23028,
@@ -815,11 +815,11 @@ class TestMint:
                         pool_helper,
                     ) = initialized_pool_fixture
                     tx = pool_helper.mint(
-                        default_chain.accounts[0], -46080, -23040, 10000
+                        chain.accounts[0], -46080, -23040, 10000
                     )
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=2162,
                         )
@@ -842,7 +842,7 @@ class TestMint:
                     min_tick = utils.get_min_tick(pool_helper.tick_spacing)
                     tick_spacing = pool_helper.tick_spacing
                     pool_helper.mint(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         min_tick,
                         min_tick + tick_spacing,
                         2**102,
@@ -863,11 +863,11 @@ class TestMint:
                     ) = initialized_pool_fixture
                     min_tick = utils.get_min_tick(pool_helper.tick_spacing)
                     tx = pool_helper.mint(
-                        default_chain.accounts[0], min_tick, -23040, 10000
+                        chain.accounts[0], min_tick, -23040, 10000
                     )
                     assert (
                         IERC20Minimal.Transfer(
-                            from_=default_chain.accounts[0].address,
+                            from_=chain.accounts[0].address,
                             to=pool.address,
                             value=3161,
                         )
@@ -887,16 +887,16 @@ class TestMint:
                         pool,
                         pool_helper,
                     ) = initialized_pool_fixture
-                    pool_helper.mint(default_chain.accounts[0], -46080, -46020, 10000)
-                    pool.burn(-46080, -46020, 10000, from_=default_chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -46080, -46020, 10000)
+                    pool.burn(-46080, -46020, 10000, from_=chain.accounts[0])
 
                     amount0, amount1 = pool.collect(
-                        default_chain.accounts[0],
+                        chain.accounts[0],
                         -46080,
                         -46020,
                         MAX_UINT_128,
                         MAX_UINT_128,
-                        from_=default_chain.accounts[0],
+                        from_=chain.accounts[0],
                     ).return_value
                     assert amount0 == 0
                     assert amount1 == 3
@@ -922,8 +922,8 @@ class TestMint:
                     observation = pool.observations(0)
                     utils.check_observation_equals(observation, expected_observation)
 
-                    pool.advanceTime(1, from_=default_chain.accounts[0])
-                    pool_helper.mint(default_chain.accounts[0], -46080, -23040, 100)
+                    pool.advanceTime(1, from_=chain.accounts[0])
+                    pool_helper.mint(chain.accounts[0], -46080, -23040, 100)
                     observation = pool.observations(0)
                     utils.check_observation_equals(observation, expected_observation)
 
@@ -934,19 +934,19 @@ class TestMint:
             Protocol fees accumulate as expected during swap
             """
             token0, token1, factory, pool, pool_helper = initialized_pool_fixture
-            pool.setFeeProtocol(6, 6, from_=default_chain.accounts[0])
+            pool.setFeeProtocol(6, 6, from_=chain.accounts[0])
 
             pool_helper.mint(
-                default_chain.accounts[0],
+                chain.accounts[0],
                 pool_helper.min_tick + pool_helper.tick_spacing,
                 pool_helper.max_tick - pool_helper.tick_spacing,
                 utils.expand_to_18_decimals(1),
             )
             pool_helper.swap_exact_0_for_1(
-                utils.expand_to_18_decimals(1) // 10, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 10, chain.accounts[0]
             )
             pool_helper.swap_exact_1_for_0(
-                utils.expand_to_18_decimals(1) // 100, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 100, chain.accounts[0]
             )
 
             protocol_fees = pool.protocolFees()
@@ -961,23 +961,23 @@ class TestMint:
             """
             token0, token1, factory, pool, pool_helper = initialized_pool_fixture
             pool_helper.mint(
-                default_chain.accounts[0],
+                chain.accounts[0],
                 pool_helper.min_tick + pool_helper.tick_spacing,
                 pool_helper.max_tick - pool_helper.tick_spacing,
                 utils.expand_to_18_decimals(1),
             )
             pool_helper.swap_exact_0_for_1(
-                utils.expand_to_18_decimals(1) // 10, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 10, chain.accounts[0]
             )
             pool_helper.swap_exact_1_for_0(
-                utils.expand_to_18_decimals(1) // 100, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 100, chain.accounts[0]
             )
 
             protocol_fees = pool.protocolFees()
             assert protocol_fees.token0 == 0
             assert protocol_fees.token1 == 0
 
-            pool.setFeeProtocol(6, 6, from_=default_chain.accounts[0])
+            pool.setFeeProtocol(6, 6, from_=chain.accounts[0])
             protocol_fees = pool.protocolFees()
             assert protocol_fees.token0 == 0
             assert protocol_fees.token1 == 0
@@ -990,16 +990,16 @@ class TestMint:
             """
             token0, token1, factory, pool, pool_helper = initialized_pool_fixture
             pool_helper.mint(
-                default_chain.accounts[1],
+                chain.accounts[1],
                 pool_helper.min_tick + pool_helper.tick_spacing,
                 pool_helper.max_tick - pool_helper.tick_spacing,
                 utils.expand_to_18_decimals(1),
             )
             pool_helper.swap_exact_0_for_1(
-                utils.expand_to_18_decimals(1) // 10, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 10, chain.accounts[0]
             )
             pool_helper.swap_exact_1_for_0(
-                utils.expand_to_18_decimals(1) // 100, default_chain.accounts[0]
+                utils.expand_to_18_decimals(1) // 100, chain.accounts[0]
             )
 
             with must_revert():
@@ -1007,11 +1007,11 @@ class TestMint:
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                     0,
-                    from_=default_chain.accounts[0],
+                    from_=chain.accounts[0],
                 )
 
             pool_helper.mint(
-                default_chain.accounts[0],
+                chain.accounts[0],
                 pool_helper.min_tick + pool_helper.tick_spacing,
                 pool_helper.max_tick - pool_helper.tick_spacing,
                 1,
@@ -1019,7 +1019,7 @@ class TestMint:
 
             position_info = pool.positions(
                 utils.get_position_key(
-                    str(default_chain.accounts[0].address),
+                    str(chain.accounts[0].address),
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                 )
@@ -1041,12 +1041,12 @@ class TestMint:
                 pool_helper.min_tick + pool_helper.tick_spacing,
                 pool_helper.max_tick - pool_helper.tick_spacing,
                 1,
-                from_=default_chain.accounts[0],
+                from_=chain.accounts[0],
             )
 
             position_info = pool.positions(
                 utils.get_position_key(
-                    str(default_chain.accounts[0].address),
+                    str(chain.accounts[0].address),
                     pool_helper.min_tick + pool_helper.tick_spacing,
                     pool_helper.max_tick - pool_helper.tick_spacing,
                 )
@@ -1069,9 +1069,9 @@ class TestBurn:
     @pytest.fixture(scope="function")
     def initialized_pool_fixture(self, pool_fixture):
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
         pool_helper.mint(
-            default_chain.accounts[0],
+            chain.accounts[0],
             pool_helper.min_tick,
             pool_helper.max_tick,
             utils.expand_to_18_decimals(2),
@@ -1085,29 +1085,29 @@ class TestBurn:
         Does not clear the position fee growth snapshot if no more liquidity
         """
         token0, token1, factory, pool, pool_helper = initialized_pool_fixture
-        pool.advanceTime(10, from_=default_chain.accounts[0])
+        pool.advanceTime(10, from_=chain.accounts[0])
         pool_helper.mint(
-            default_chain.accounts[1],
+            chain.accounts[1],
             pool_helper.min_tick,
             pool_helper.max_tick,
             utils.expand_to_18_decimals(1),
         )
         pool_helper.swap_exact_0_for_1(
-            utils.expand_to_18_decimals(1), default_chain.accounts[0]
+            utils.expand_to_18_decimals(1), chain.accounts[0]
         )
         pool_helper.swap_exact_1_for_0(
-            utils.expand_to_18_decimals(1), default_chain.accounts[0]
+            utils.expand_to_18_decimals(1), chain.accounts[0]
         )
         pool.burn(
             pool_helper.min_tick,
             pool_helper.max_tick,
             utils.expand_to_18_decimals(1),
-            from_=default_chain.accounts[1],
+            from_=chain.accounts[1],
         )
 
         position_info = pool.positions(
             utils.get_position_key(
-                str(default_chain.accounts[1].address),
+                str(chain.accounts[1].address),
                 pool_helper.min_tick,
                 pool_helper.max_tick,
             )
@@ -1135,12 +1135,12 @@ class TestBurn:
         tick_lower = pool_helper.min_tick + pool_helper.tick_spacing
         tick_upper = pool_helper.max_tick - pool_helper.tick_spacing
 
-        pool.advanceTime(10, from_=default_chain.accounts[0])
-        pool_helper.mint(default_chain.accounts[0], tick_lower, tick_upper, 1)
+        pool.advanceTime(10, from_=chain.accounts[0])
+        pool_helper.mint(chain.accounts[0], tick_lower, tick_upper, 1)
         pool_helper.swap_exact_0_for_1(
-            utils.expand_to_18_decimals(1), default_chain.accounts[0]
+            utils.expand_to_18_decimals(1), chain.accounts[0]
         )
-        pool.burn(tick_lower, tick_upper, 1, from_=default_chain.accounts[0])
+        pool.burn(tick_lower, tick_upper, 1, from_=chain.accounts[0])
 
         utils.check_tick_is_clear(pool, tick_lower)
         utils.check_tick_is_clear(pool, tick_upper)
@@ -1155,18 +1155,18 @@ class TestBurn:
         tick_lower = pool_helper.min_tick + pool_helper.tick_spacing
         tick_upper = pool_helper.max_tick - pool_helper.tick_spacing
 
-        pool.advanceTime(10, from_=default_chain.accounts[0])
-        pool_helper.mint(default_chain.accounts[0], tick_lower, tick_upper, 1)
+        pool.advanceTime(10, from_=chain.accounts[0])
+        pool_helper.mint(chain.accounts[0], tick_lower, tick_upper, 1)
         pool_helper.mint(
-            default_chain.accounts[0],
+            chain.accounts[0],
             tick_lower + pool_helper.tick_spacing,
             tick_upper,
             1,
         )
         pool_helper.swap_exact_0_for_1(
-            utils.expand_to_18_decimals(1), default_chain.accounts[0]
+            utils.expand_to_18_decimals(1), chain.accounts[0]
         )
-        pool.burn(tick_lower, tick_upper, 1, from_=default_chain.accounts[0])
+        pool.burn(tick_lower, tick_upper, 1, from_=chain.accounts[0])
 
         utils.check_tick_is_clear(pool, tick_lower)
         utils.check_tick_is_not_clear(pool, tick_upper)
@@ -1181,18 +1181,18 @@ class TestBurn:
         tick_lower = pool_helper.min_tick + pool_helper.tick_spacing
         tick_upper = pool_helper.max_tick - pool_helper.tick_spacing
 
-        pool.advanceTime(10, from_=default_chain.accounts[0])
-        pool_helper.mint(default_chain.accounts[0], tick_lower, tick_upper, 1)
+        pool.advanceTime(10, from_=chain.accounts[0])
+        pool_helper.mint(chain.accounts[0], tick_lower, tick_upper, 1)
         pool_helper.mint(
-            default_chain.accounts[0],
+            chain.accounts[0],
             tick_lower,
             tick_upper - pool_helper.tick_spacing,
             1,
         )
         pool_helper.swap_exact_0_for_1(
-            utils.expand_to_18_decimals(1), default_chain.accounts[0]
+            utils.expand_to_18_decimals(1), chain.accounts[0]
         )
-        pool.burn(tick_lower, tick_upper, 1, from_=default_chain.accounts[0])
+        pool.burn(tick_lower, tick_upper, 1, from_=chain.accounts[0])
 
         utils.check_tick_is_not_clear(pool, tick_lower)
         utils.check_tick_is_clear(pool, tick_upper)
@@ -1202,9 +1202,9 @@ class TestObserve:
     @pytest.fixture(scope="function")
     def initialized_pool_fixture(self, pool_fixture):
         token0, token1, factory, pool, pool_helper = pool_fixture
-        pool.initialize(utils.encode_price_sqrt(1, 1), from_=default_chain.accounts[0])
+        pool.initialize(utils.encode_price_sqrt(1, 1), from_=chain.accounts[0])
         pool_helper.mint(
-            default_chain.accounts[0],
+            chain.accounts[0],
             pool_helper.min_tick,
             pool_helper.max_tick,
             utils.expand_to_18_decimals(2),
@@ -1220,8 +1220,8 @@ class TestObserve:
         token0, token1, factory, pool, pool_helper = initialized_pool_fixture
         tick_cumulative = pool.observe([0])[0]
         assert tick_cumulative[0] == 0
-        pool.advanceTime(10, from_=default_chain.accounts[0])
-        tick_cumulative = pool.observe([0], from_=default_chain.accounts[0])[0]
+        pool.advanceTime(10, from_=chain.accounts[0])
+        tick_cumulative = pool.observe([0], from_=chain.accounts[0])[0]
         assert tick_cumulative[0] == 0
 
     def test_current_tick_accumulator_after_single_swap(self, initialized_pool_fixture):
@@ -1229,9 +1229,9 @@ class TestObserve:
         Current tick accumulator after single swap
         """
         token0, token1, factory, pool, pool_helper = initialized_pool_fixture
-        pool_helper.swap_exact_0_for_1(1000, default_chain.accounts[0])
-        pool.advanceTime(4, from_=default_chain.accounts[0])
-        tick_cumulative = pool.observe([0], from_=default_chain.accounts[0])[0]
+        pool_helper.swap_exact_0_for_1(1000, chain.accounts[0])
+        pool.advanceTime(4, from_=chain.accounts[0])
+        tick_cumulative = pool.observe([0], from_=chain.accounts[0])[0]
         assert tick_cumulative[0] == -4
 
     def test_current_tick_accumulator_after_two_swaps(self, initialized_pool_fixture):
@@ -1240,14 +1240,14 @@ class TestObserve:
         """
         token0, token1, factory, pool, pool_helper = initialized_pool_fixture
         pool_helper.swap_exact_0_for_1(
-            utils.expand_to_18_decimals(1) // 2, default_chain.accounts[0]
+            utils.expand_to_18_decimals(1) // 2, chain.accounts[0]
         )
         assert pool.slot0().tick == -4452
-        pool.advanceTime(4, from_=default_chain.accounts[0])
+        pool.advanceTime(4, from_=chain.accounts[0])
         pool_helper.swap_exact_1_for_0(
-            utils.expand_to_18_decimals(1) // 4, default_chain.accounts[0]
+            utils.expand_to_18_decimals(1) // 4, chain.accounts[0]
         )
         assert pool.slot0().tick == -1558
-        pool.advanceTime(6, from_=default_chain.accounts[0])
-        tick_cumulative = pool.observe([0], from_=default_chain.accounts[0])[0]
+        pool.advanceTime(6, from_=chain.accounts[0])
+        tick_cumulative = pool.observe([0], from_=chain.accounts[0])[0]
         assert tick_cumulative[0] == -27156
